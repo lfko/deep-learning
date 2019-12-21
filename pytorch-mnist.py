@@ -22,19 +22,28 @@ class Net(nn.Module):
         super(Net, self).__init__()
 
         # Sequential for grouping blocks/layers
-        self.features = nn.Sequential(
-            nn.Linear(784, 128),
-            nn.ReLU(), 
-            nn.Linear(128, 64),
-            nn.ReLU()
-        )
+        #self.features = nn.Sequential(
+        #    nn.Linear(784, 128),
+        #    nn.ReLU(), 
+        #    nn.Linear(128, 64),
+        #    nn.ReLU()
+        #)
         # A single model can be used to simulate having a large number of different network architectures by randomly dropping out nodes during training. 
         # This is called dropout and offers a very computationally cheap and remarkably effective regularization method to reduce overfitting 
         # and improve generalization error in deep neural networks of all kinds.
         #self.maxpool = nn.MaxPool2d(2, 2)
-        self.classifier = nn.Sequential(
-            nn.Linear(64, 10), nn.LogSoftmax(dim = 1)
-        )
+        #self.classifier = nn.Sequential(
+        #    nn.Linear(64, 10), nn.LogSoftmax(dim = 1)
+        #)
+                # Implement the sequential module for feature extraction
+        self.features = nn.Sequential(
+            nn.Conv2d(in_channels=1, out_channels=10, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2, 2), nn.ReLU(inplace=True), nn.BatchNorm2d(10),
+            nn.Conv2d(in_channels=10, out_channels=20, kernel_size=3, stride=1, padding=1),
+            nn.MaxPool2d(2, 2), nn.ReLU(inplace=True), nn.BatchNorm2d(20))
+        
+        # Implement the fully connected layer for classification
+        self.classifier = nn.Linear(in_features=7*7*20, out_features=10)
     
     def forward(self, x):
         '''
@@ -56,7 +65,7 @@ class Net(nn.Module):
         # Sequential
         x = self.features(x)
         #x = self.maxpool(x)
-        x = x.view(-1, 64)
+        #x = x.view(-1, 64)
         x = self.classifier(x)
 
         return x
@@ -90,7 +99,7 @@ print('Shape Train: ', train_set_shape, 'Shape Test:', test_set_shape)
 # initialise a new Network
 net = Net()
 optimizer = optim.SGD(net.parameters(), lr = .01, momentum = .5)
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss() # L2 Norm
 
 # actual training
 net.train()
@@ -98,7 +107,7 @@ for epoch in range(10):
     for batch_idx, data in enumerate(trainloader):
         # get inputs
         inputs, labels = data
-        inputs = inputs.view(-1, 28 * 28 * 1)
+        #inputs = inputs.view(28 * 28 * 1, -1)
 
         optimizer.zero_grad()
 
